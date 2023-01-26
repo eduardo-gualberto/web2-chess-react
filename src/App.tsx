@@ -13,7 +13,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Layout header={<Header />} content={<HomeScene />} />} />
-        <Route path="/online" element={<Layout header={<Header />} content={<PlayOnlineScene />} />} />
+        <Route path="/online" element={<Layout header={<Header shouldShowBackIcon backIconPath='/'/>} content={<PlayOnlineScene />} />} />
       </Routes>
     </Router>
   );

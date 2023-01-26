@@ -11,7 +11,7 @@ export default function HomeScene() {
             </div>
             <div id="nav-bar">
                 <a href="#" className="play-btn" id="alone">Jogar</a>
-                <a href="./online.html" className="play-btn" id="online">Jogar Online</a>
+                <a href="/online" className="play-btn" id="online">Jogar Online</a>
             </div>
         </div>
     )

@@ -7,3 +7,10 @@
     text-align: center;
     color: white;
 }
+
+#back-icon {
+    position: absolute;
+    left: 10px;
+    top: 0;
+    color: white;
+}

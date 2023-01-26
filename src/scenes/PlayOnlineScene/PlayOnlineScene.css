@@ -53,6 +53,15 @@
     gap: 15px;
 }
 
+.copy-icon {
+    padding: 0 10px;
+    color: white;
+}
+
+.copy-icon:hover {
+    cursor: pointer;
+}
+
 @media only screen and (max-width: 768px) {
     #code-container-online {
         width: 70%;
