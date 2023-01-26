@@ -1,0 +1,9 @@
+.header {
+    background-color: #EB5E28;
+    height: 50px;
+    width: 1fr;
+    font-weight: bold;
+    font-size: 36px;
+    text-align: center;
+    color: white;
+}
