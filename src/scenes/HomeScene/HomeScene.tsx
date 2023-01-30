@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import './HomeScene.css';
 import Chessboard from "chessboardjsx";
 import { isMobile } from 'react-device-detect';
-import { Chess, Piece as ChessPiece, Square as ChessSquare } from "chess.js";
+import { Chess, Piece, Square } from "chess.js";
 import { useOnMount } from "../../common/helpers/functionalLifecycle";
+import Web2Chessboard from "../../common/components/Web2Chessboard/Web2Chessboard";
 
 export default function HomeScene() {
-    const game = new Chess();
     let [chessboardHeight, setChessboardHeight] = useState(0)
 
     useOnMount(() => {
@@ -19,7 +19,11 @@ export default function HomeScene() {
     return (
         <div id="content-body">
             <div id="chessboard">
-                <Chessboard position='start' width={chessboardHeight} />
+                <Web2Chessboard>
+                    {({ position, onDrop }) => (
+                        <Chessboard position={position} onDrop={onDrop} width={chessboardHeight}/>
+                    )}
+                </Web2Chessboard>
             </div>
             <div id="nav-bar">
                 <a href="#" className="play-btn" id="alone">Jogar</a>
