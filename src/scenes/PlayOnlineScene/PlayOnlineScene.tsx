@@ -1,58 +1,81 @@
 import React, { Component, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./PlayOnlineScene.css"
 import codeStringGenerationWorker from "../../workers/codeStringGenerationWorker"
+import axios from "axios";
 import { useOnMount } from "../../common/helpers/functionalLifecycle";
 
-type PlayOnlineSceneState = {
-    codeString: string
-}
+export default function PlayOnlineScene() {
+    const navigate = useNavigate()
+    let [codeString, setCodeString] = useState('')
+    let [inputCodeString, setInputCodeString] = useState('')
 
-export default class PlayOnlineScene extends Component {
-
-    state: PlayOnlineSceneState = {
-        codeString: ''
-    }
-
-    constructor(props: any) {
-        super(props)
-    }
-
-    componentDidMount(): void {
-        this.setState({ codeString: codeStringGenerationWorker() })
-    }
-
-    clickedNewCodeButton = () => {
+    useOnMount(() => {
         const generatedCodeString = codeStringGenerationWorker()
-        this.setState({codeString: codeStringGenerationWorker()})
+        setCodeString(generatedCodeString)
+    })
+
+    const clickedNewCodeButton = () => {
+        const generatedCodeString = codeStringGenerationWorker()
+        setCodeString(generatedCodeString)
     }
 
-    clickedCopyIcon = () => {
-        navigator.clipboard.writeText(this.state.codeString)
+    const clickedCopyIcon = () => {
+        navigator.clipboard.writeText(codeString)
     };
 
+    // TODO: create models that can be instanced from the servers response 
 
-    render() {
-        const { codeString } = this.state
-        return (
-            <div id="content-body-online">
-                <div id="code-container-online">
-                    <div>
-                        <span id="code-online">{codeString}</span>
-                        <span className="material-symbols-outlined copy-icon" onClick={this.clickedCopyIcon}>
-                            content_copy
-                        </span>
-                    </div>
-                    <div id="action-btns-online">
-                        <button id="start-btn-online" className="action-btn-online">Começar</button>
-                        <button id="new-btn-online" className="action-btn-online" onClick={this.clickedNewCodeButton}>Novo Código</button>
-                    </div>
-                    <div id="or-separator">ou</div>
-                    <div id="play-code-container">
-                        <input type="text" name="play-code" id="play-code-input" />
-                        <button id="play-code-button"> Entrar</button>
-                    </div>
+    const clickedStart = async () => {
+        const match_code = codeString
+        const user_id = codeStringGenerationWorker()
+        const user_name = `user${user_id}`
+
+        const res = await axios.post('http://localhost:3001/game', { match_code, user_id, user_name }, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+
+        // TODO: navigateToPlayOnlineChessBoardScene and pass the data retrieved from server to it
+    }
+
+    const clickedJoin = async () => {
+        const match_code = inputCodeString
+        const user_id = codeStringGenerationWorker()
+        const user_name = `user${user_id}`
+
+        const res = await axios.post('http://localhost:3001/join', { match_code, user_id, user_name }, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+
+
+        // TODO: navigateToPlayOnlineChessBoardScene and pass the data retrieved from server to it        
+    }
+
+
+    return (
+        <div id="content-body-online">
+            <div id="code-container-online">
+                <div>
+                    <span id="code-online">{codeString}</span>
+                    <span className="material-symbols-outlined copy-icon" onClick={clickedCopyIcon}>
+                        content_copy
+                    </span>
+                </div>
+                <div id="action-btns-online">
+                    <button id="start-btn-online" className="action-btn-online" onClick={clickedStart}>Começar</button>
+                    <button id="new-btn-online" className="action-btn-online" onClick={clickedNewCodeButton}>Novo Código</button>
+                </div>
+                <div id="or-separator">ou</div>
+                <div id="play-code-container">
+                    <input type="text" name="play-code" id="play-code-input" value={inputCodeString} onChange={(e) => { setInputCodeString(e.target.value) }} />
+                    <button id="play-code-button" onClick={clickedJoin}> Entrar</button>
                 </div>
             </div>
-        )
-    }
+        </div>
+    )
+
 }

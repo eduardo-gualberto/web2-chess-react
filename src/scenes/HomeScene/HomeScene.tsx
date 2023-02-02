@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import './HomeScene.css';
 import Chessboard from "chessboardjsx";
 import { isMobile } from 'react-device-detect';
-import { Chess, Piece, Square } from "chess.js";
 import { useOnMount } from "../../common/helpers/functionalLifecycle";
 import Web2Chessboard from "../../common/components/Web2Chessboard/Web2Chessboard";
 
