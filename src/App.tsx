@@ -6,6 +6,7 @@ import Header from './common/components/Header/Header';
 import Layout from './common/components/Layout/Layout';
 import PlayOnlineScene from './scenes/PlayOnlineScene/PlayOnlineScene';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import PlayOnlineChessBoardScene from './scenes/PlayOnlineChessBoardScene/PlayOnlineChessBoardScene';
 
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Layout header={<Header />} content={<HomeScene />} />} />
         <Route path="/online" element={<Layout header={<Header shouldShowBackIcon backIconPath='/'/>} content={<PlayOnlineScene />} />} />
+        <Route path="/onlineGame" element={<Layout header={<Header shouldShowBackIcon backIconPath='/online'/>} content={<PlayOnlineChessBoardScene />} />} />
       </Routes>
     </Router>
   );

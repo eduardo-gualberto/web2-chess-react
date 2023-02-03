@@ -24,7 +24,6 @@ export default function PlayOnlineScene() {
         navigator.clipboard.writeText(codeString)
     };
 
-    // TODO: create models that can be instanced from the servers response 
 
     const clickedStart = async () => {
         const match_code = codeString
@@ -37,7 +36,11 @@ export default function PlayOnlineScene() {
             }
         })
 
-        // TODO: navigateToPlayOnlineChessBoardScene and pass the data retrieved from server to it
+        navigate('/onlineGame', {
+            state: {
+                match_code, user_id, user_name, color: 'white'
+            }
+        })
     }
 
     const clickedJoin = async () => {
@@ -52,7 +55,11 @@ export default function PlayOnlineScene() {
         })
 
 
-        // TODO: navigateToPlayOnlineChessBoardScene and pass the data retrieved from server to it        
+        navigate('/onlineGame', {
+            state: {
+                match_code, user_id, user_name, color: 'black'
+            }
+        })        
     }
 
 

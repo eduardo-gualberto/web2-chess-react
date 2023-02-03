@@ -9,6 +9,8 @@ type Web2ChessboardChildrenProps = {
     }) => void
 }
 type Web2ChessboardProps = {
+    position: string,
+    onFirstMove: () => void,
     children: (obj: Web2ChessboardChildrenProps) => React.ReactNode
 }
 
@@ -20,11 +22,13 @@ type Web2ChessboardState = {
 export default class Web2Chessboard extends Component {
     game: Chess
     state: Web2ChessboardState
+    isFirstMove: boolean
 
     constructor(public props: Web2ChessboardProps) {
         super(props)
-        this.state = { position: 'start' }
+        this.state = { position: props.position }
         this.game = new Chess()
+        this.isFirstMove = true
     }
 
     onDrop = ({ sourceSquare, targetSquare }: { sourceSquare: Square, targetSquare: Square }) => {
@@ -36,6 +40,10 @@ export default class Web2Chessboard extends Component {
             });
 
             this.setState({ position: this.game.fen() })
+            if (this.isFirstMove) {
+                this.props.onFirstMove()
+                this.isFirstMove = false
+            }
         } catch (error) {
             return
         }

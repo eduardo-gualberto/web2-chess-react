@@ -18,9 +18,9 @@ export default function HomeScene() {
     return (
         <div id="content-body">
             <div id="chessboard">
-                <Web2Chessboard>
+                <Web2Chessboard position="start" onFirstMove={() => { }}>
                     {({ position, onDrop }) => (
-                        <Chessboard position={position} onDrop={onDrop} width={chessboardHeight}/>
+                        <Chessboard position={position} onDrop={onDrop} width={chessboardHeight} />
                     )}
                 </Web2Chessboard>
             </div>
