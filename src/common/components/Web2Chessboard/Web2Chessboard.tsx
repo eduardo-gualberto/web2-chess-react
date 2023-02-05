@@ -29,6 +29,11 @@ export default class Web2Chessboard extends Component {
         this.state = { position: props.position }
         this.game = new Chess()
         this.isFirstMove = true
+        document.addEventListener("move", (e) => {
+            //@ts-ignore
+            const move = e.detail
+            this.onDrop({sourceSquare: move.from, targetSquare: move.to})
+        })
     }
 
     onDrop = ({ sourceSquare, targetSquare }: { sourceSquare: Square, targetSquare: Square }) => {

@@ -14,6 +14,70 @@ type PlayOnlineChessBoardSceneLocationState = {
     color: 'white' | 'black'
 }
 
+const poolForOponentMove = (match_code: string, user_id: string, onMove: (move: { from: string, to: string, pomotion: string }) => void) => {
+    // clearInterval(poolOponentMoveInterval)
+    // poolOponentMoveInterval = setInterval(() => {
+    const interval = setInterval(() => {
+        // console.log("pooling for oponents move...");
+        axios.get(`http://localhost:3001/pool/move?match_code=${match_code}&user_id=${user_id}`, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+            .then(res => {
+                const move = res.data.move ? { from: res.data.move.from, to: res.data.move.to, promotion: res.data.move.promotion } : undefined
+                if (move) {
+                    
+                    //@ts-ignore
+                    onMove(move)
+                    // clearInterval(interval)
+                }
+            })
+            .catch(e => {
+                console.log(e);
+            })
+    }, 5000)
+}
+
+
+const poolForGameCreated = (match_code: string, user_id: string, onCreated: (oponent: { user_id: string, user_name: string }) => void) => {
+    // clearInterval(poolGameCreatedInterval)
+    // poolGameCreatedInterval = setInterval(() => {
+    const interval = setInterval(() => {
+        axios.get(`http://localhost:3001/pool/gameCreated?match_code=${match_code}`, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+            .then(res => {
+                if (res.data.is_game_created) {
+                    // console.log("game created");
+                    
+                    clearInterval(interval)
+                    onCreated(res.data.oponent)
+                }
+            })
+            .catch(e => {
+                // console.log(e);
+            })
+    }, 5000)
+}
+
+function blacksNetWorkSetUp(match_code: string, user_id: string, onMove: (move: { from: string, to: string, pomotion: string }) => void, onCreated: (oponent: { user_id: string, user_name: string }) => void) {
+    // poolForGameCreated(match_code, user_id, ({ user_id, user_name }) => {
+    //     onCreated({ user_id, user_name })
+    // })
+    poolForOponentMove(match_code, user_id, onMove)
+}
+
+function whitesNetWorkSetUp(match_code: string, user_id: string, onMove: (move: { from: string, to: string, pomotion: string }) => void, onCreated: (oponent: { user_id: string, user_name: string }) => void) {
+    // poolForGameCreated(match_code, user_id, ({ user_id, user_name }) => {
+    //     onCreated({ user_id, user_name })
+    // })
+    poolForOponentMove(match_code, user_id, onMove)
+}
+
+
 // TODO: acertar logica que permita melhor diferenciação entre brancas e pretas e suas conexoes com o server
 export default function PlayOnlineChessBoardScene() {
     const location = useLocation()
@@ -34,72 +98,37 @@ export default function PlayOnlineChessBoardScene() {
         }
 
         if (color === 'white') {
-            isItMyTurn = true
-            poolForGameCreated()
-            console.log("sou brancas");
-            
+            whitesNetWorkSetUp(match_code, user_id, ({ from, to }) => {
+                const event = new CustomEvent("move", {detail: {from, to}})
+                document.dispatchEvent(event)
+                console.log("dispatched event move");
+
+            }, ({ user_id, user_name }) => {
+                console.log("game created");
+                
+            })
         } else {
-            isItMyTurn = false
-            poolForOponentMove()
-            console.log("sou pretas");
-            
+            blacksNetWorkSetUp(match_code, user_id, ({ from, to }) => {                
+                const event = new CustomEvent("move", {detail: {from, to}})
+                document.dispatchEvent(event)
+                console.log("dispatched event move");
+                
+            }, ({ user_id, user_name }) => {
+                console.log("game created");
+                
+            })
+
         }
     })
 
-    useOnUnmount(() => {
-        clearInterval(poolOponentMoveInterval)
-    })
-
-    const poolForGameCreated = () => {
-        clearInterval(poolGameCreatedInterval)
-        poolGameCreatedInterval = setInterval(() => {
-            axios.get(`http://localhost:3001/pool/gameCreated?match_code=${match_code}`, {
-                headers: {
-                    "Content-Type": "application/json"
-                }
-            })
-                .then(res => {
-                    if (res.data.is_game_created) {
-                        setGameCreated(true)
-                        setOponent(res.data.oponent)
-                        clearInterval(poolGameCreatedInterval)
-                    }
-                })
-                .catch(e => {
-                    // console.log(e);
-                })
-        }, 1000)
-    }
-
-    const poolForOponentMove = () => {
-        clearInterval(poolOponentMoveInterval)
-        poolOponentMoveInterval = setInterval(() => {
-            console.log("pooling for oponents move...");
-            axios.get(`http://localhost:3001/pool/move?match_code=${match_code}&user_id=${user_id}`, {
-                headers: {
-                    "Content-Type": "application/json"
-                }
-            })
-                .then(res => {
-                    const move = res.data.move ? { from: res.data.move.from, to: res.data.move.to, promotion: res.data.move.promotion } : undefined
-                    if (move) {
-                        chessBoardRef?.onDrop({ sourceSquare: move.from, targetSquare: move.to })
-                    }
-                })
-                .catch(e => {
-                    // console.log(e);
-                })
-        }, 1000)
-    }
-
     const sendMove = ({ sourceSquare, targetSquare }: { sourceSquare: string, targetSquare: string }) => {
-        axios.post('http://localhost:30001/move', { match_code, user_id, from: sourceSquare, to: sourceSquare }, {
+        axios.post('http://localhost:3001/move', { match_code, user_id, from: sourceSquare, to: targetSquare }, {
             headers: {
                 "Content-Type": "application/json"
             }
         })
             .then(res => {
-                console.log(res.data.gameOver);
+                console.log(res.data);
             })
             .catch(e => {
                 // console.log(e)
@@ -109,15 +138,11 @@ export default function PlayOnlineChessBoardScene() {
     return (
         <div id="content-body">
             <div id="chessboard">
-                <Web2Chessboard position="start" onFirstMove={() => {
-                        poolForOponentMove()
-                }} ref={el => chessBoardRef = el}>
+                <Web2Chessboard position="start" onFirstMove={() => { }}>
                     {({ position, onDrop }) => {
                         return (
                             <Chessboard position={position} onDrop={({ sourceSquare, targetSquare, piece }) => {
-                                if (isItMyTurn)
-                                    sendMove({ sourceSquare, targetSquare })
-                                isItMyTurn = !isItMyTurn
+                                sendMove({ sourceSquare, targetSquare })
                                 onDrop({ sourceSquare, targetSquare })
                             }} width={chessboardHeight} orientation={color} />
                         )
