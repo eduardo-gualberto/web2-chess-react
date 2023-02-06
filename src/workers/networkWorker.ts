@@ -1,56 +1,137 @@
+import axios from "axios";
 import { Chess, Move } from "chess.js";
 
-export default class networkWorker {
+export default class NetworkWorker {
 
-    intervals: {[userId: string]: NodeJS.Timer}
+    static networkWorker: NetworkWorker | null = null
+    static getInstance(): NetworkWorker {
+        if (NetworkWorker.networkWorker)
+            return NetworkWorker.networkWorker
+
+        NetworkWorker.networkWorker = new NetworkWorker()
+        return NetworkWorker.networkWorker
+    }
+
+
+    intervals: { [user_id: string]: NodeJS.Timer }
 
     constructor() {
         this.intervals = {}
     }
 
-    public async joinOnlineMatch(userId: number, matchCode: string): Promise<void> {
+    public async joinOnlineMatch(user_id: string, user_name: string, match_code: string): Promise<void> {
         return new Promise((res, rej) => {
-            // 1. ask server to join match
-            // 2. if successful then resolve else reject
+            axios.post('http://localhost:3001/join', { match_code, user_id, user_name }, {
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
+                .then(r => res())
+                .catch(e => rej(e))
         })
     }
 
-    public async createOnlineMatch(userId: number, matchCode: string): Promise<void> {
+    public async createOnlineMatch(user_id: string, user_name: string, match_code: string): Promise<void> {
         return new Promise((res, rej) => {
-            // 1. send matchCode so the server can create a game instance
-            // 2. if successful then resolve else reject
-            // fetch.post(server + endpoit, { matchCode }, result => if result.data.success then resolve else reject)
+            axios.post('http://localhost:3001/game', { match_code, user_id, user_name }, {
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
+                .then(r => res())
+                .catch(e => rej(e))
+
         })
     }
 
-    public async sendMove(userId: number, move: Move, matchCode: string): Promise<void> {
+    public async sendMove(user_id: string, match_code: string, from: string, to: string): Promise<void> {
         return new Promise((res, rej) => {
-            // 1. send move to the server so it can be registered
-            // 2. if successful, resolve promise, else reject
-            // fetch.post(server + endpoint, { userId, move, matchCode }, result => if result.data.success then res() else rej() )
+            axios.post('http://localhost:3001/move', { match_code, user_id, from, to }, {
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
+                .then(r => {
+                    res()
+                })
+                .catch(e => {
+                    rej(e)
+                })
         })
     }
 
     public async poolForMove(userId: number, currGame: Chess, matchCode: string): Promise<Move> {
         return new Promise((res, rej) => {
             const interval = setInterval(() => {
-                // 1. ask server for new move
-                // 2. if theres a new move, resolve the promise and clearInterval
-                // 3. if any error, reject the promise and clear the user's interval
-                // fetch.get(server + endpoint, result =>
-                // if (result.data.newMove and result.data.moveActor equals userId) then res(result.data.newMove)
-                // if result.error then reject(result.data.error), stopPoolForMove(userId)
-                //)
+
             }, 1000)
             this.intervals[userId] = interval
         })
     }
 
-    public async stopPoolForMove(userId: string): Promise<void> {
+    public subscribeToMove(user_id: string, match_code: string, subscriber: (from: string, to: string) => void) {
+        if (this.intervals["move#" + user_id])
+            return
+        this.intervals["move#" + user_id] = setInterval(() => {
+            axios.get(`http://localhost:3001/pool/move?match_code=${match_code}&user_id=${user_id}`, {
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
+                .then(res => {
+                    const move = res.data.move ? { from: res.data.move.from, to: res.data.move.to, promotion: res.data.move.promotion } : undefined
+                    if (move) {
+                        //@ts-ignore
+                        subscriber(move.from, move.to)
+                    }
+                })
+                .catch(e => {
+                    console.log(e);
+                })
+        }, 5000)
+    }
+
+    public subscribeToGameCreated(user_id: string, match_code: string, subscriber: (opponent: { user_id: string, user_name: string }) => void) {
+        if (this.intervals["game#" + user_id])
+            return
+        this.intervals["game#" + user_id] = setInterval(() => {
+            axios.get(`http://localhost:3001/pool/gameCreated?match_code=${match_code}&user_id=${user_id}`, {
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
+                .then(res => {
+                    if (res.data.is_game_created) {
+                        console.log("from networkWorker", res.data.oponent);
+
+                        subscriber(res.data.oponent)
+                    }
+                })
+                .catch(e => {
+                    console.log(e);
+                })
+        }, 5000)
+    }
+
+    public async unsubscribeToMove(user_id: string): Promise<void> {
         return new Promise((res, rej) => {
-            // clearInterval(this.intervals[userId])
-            // delete this.intervals[userId]
-            // res()
+            if (this.intervals["move#" + user_id]) {
+                clearInterval(this.intervals["move#" + user_id])
+                delete this.intervals["move#" + user_id]
+            }
+            res()
         })
     }
+
+    public async unsubscribeToGameCreated(user_id: string): Promise<void> {
+        return new Promise((res, rej) => {
+            if (this.intervals["game#" + user_id]) {
+                clearInterval(this.intervals["game#" + user_id])
+                delete this.intervals["game#" + user_id]
+            }
+            res()
+        })
+    }
+
+
 }

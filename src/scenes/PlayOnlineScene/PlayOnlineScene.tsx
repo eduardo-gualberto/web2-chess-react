@@ -4,8 +4,10 @@ import "./PlayOnlineScene.css"
 import codeStringGenerationWorker from "../../workers/codeStringGenerationWorker"
 import axios from "axios";
 import { useOnMount } from "../../common/helpers/functionalLifecycle";
+import NetworkWorker from "../../workers/networkWorker";
 
 export default function PlayOnlineScene() {
+    const netWorkWorker = NetworkWorker.getInstance()
     const navigate = useNavigate()
     let [codeString, setCodeString] = useState('')
     let [inputCodeString, setInputCodeString] = useState('')
@@ -30,17 +32,15 @@ export default function PlayOnlineScene() {
         const user_id = codeStringGenerationWorker()
         const user_name = `user${user_id}`
 
-        const res = await axios.post('http://localhost:3001/game', { match_code, user_id, user_name }, {
-            headers: {
-                "Content-Type": "application/json"
-            }
-        })
+        netWorkWorker.createOnlineMatch(user_id, user_name, match_code)
+            .then(() => {
+                navigate('/onlineGame', {
+                    state: {
+                        match_code, user_id, user_name, color: 'white'
+                    }
+                })
+            })
 
-        navigate('/onlineGame', {
-            state: {
-                match_code, user_id, user_name, color: 'white'
-            }
-        })
     }
 
     const clickedJoin = async () => {
@@ -48,18 +48,14 @@ export default function PlayOnlineScene() {
         const user_id = codeStringGenerationWorker()
         const user_name = `user${user_id}`
 
-        const res = await axios.post('http://localhost:3001/join', { match_code, user_id, user_name }, {
-            headers: {
-                "Content-Type": "application/json"
-            }
-        })
-
-
-        navigate('/onlineGame', {
-            state: {
-                match_code, user_id, user_name, color: 'black'
-            }
-        })        
+        netWorkWorker.joinOnlineMatch(user_id, user_name, match_code)
+            .then(() => {
+                navigate('/onlineGame', {
+                    state: {
+                        match_code, user_id, user_name, color: 'black'
+                    }
+                })
+            })
     }
 
 
