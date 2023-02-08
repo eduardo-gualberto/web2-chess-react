@@ -36,7 +36,7 @@ export default function PlayOnlineScene() {
             .then(() => {
                 navigate('/onlineGame', {
                     state: {
-                        match_code, user_id, user_name, color: 'white'
+                        match_code, user_id, user_name, color: 'white', type: 'online'
                     }
                 })
             })
@@ -52,7 +52,7 @@ export default function PlayOnlineScene() {
             .then(() => {
                 navigate('/onlineGame', {
                     state: {
-                        match_code, user_id, user_name, color: 'black'
+                        match_code, user_id, user_name, color: 'black', type: 'online'
                     }
                 })
             })

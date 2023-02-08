@@ -7,31 +7,37 @@ import { useOnMount, useOnUnmount } from "../../common/helpers/functionalLifecyc
 import { useLocation } from "react-router-dom";
 import NetworkWorker from "../../workers/networkWorker";
 import UserChessboardCard from "../../common/components/UserChessboardCard/UserChessboardCard";
+import OpponentPlayerFabric from "../../workers/opponentPlayerFabric";
 
 type PlayOnlineChessBoardSceneLocationState = {
-    match_code: string,
+    match_code?: string,
     user_id: string,
     user_name: string,
-    color: 'white' | 'black'
+    color: 'white' | 'black',
+    type: 'online' | 'random'
 }
 
-// TODO: acertar logica que permita melhor diferenciação entre brancas e pretas e suas conexoes com o server
 export default function PlayOnlineChessBoardScene() {
     const location = useLocation()
+    const { match_code, user_id, user_name, color, type } = location.state as PlayOnlineChessBoardSceneLocationState
+    const opponentPlayer = OpponentPlayerFabric.produce(type)
     const networkWorker = NetworkWorker.getInstance()
-    const { match_code, user_id, user_name, color } = location.state as PlayOnlineChessBoardSceneLocationState
     const [chessboardHeight, setChessboardHeight] = useState(0)
     const [oponent, setOponent] = useState({ user_id: '', user_name: 'Oponnent' })
 
-    networkWorker.subscribeToGameCreated(user_id, match_code, ({ user_id, user_name }) => {
+
+
+    opponentPlayer.onMove((from, to, piece) => {
+        const event = new CustomEvent("move", { detail: { from, to, piece } })
+        document.dispatchEvent(event)
+    })
+
+    opponentPlayer.onConnected(({ user_id, user_name }) => {
         networkWorker.unsubscribeToGameCreated(user_id)
         setOponent({ user_id, user_name })
     })
 
-    networkWorker.subscribeToMove(user_id, match_code, (from, to) => {
-        const event = new CustomEvent("move", { detail: { from, to } })
-        document.dispatchEvent(event)
-    })
+    opponentPlayer.start({ match_code, user_id, user_name })
 
     useOnMount(() => {
         if (isMobile) {
@@ -42,14 +48,18 @@ export default function PlayOnlineChessBoardScene() {
     })
 
     useOnUnmount(() => {
-        networkWorker.unsubscribeToMove(user_id)
-        networkWorker.unsubscribeToGameCreated(user_id)
+        opponentPlayer.stop()
     })
 
-    const sendMove = ({ sourceSquare, targetSquare }: { sourceSquare: string, targetSquare: string }) => {
-        networkWorker.sendMove(user_id, match_code, sourceSquare, targetSquare)
-            .then(r => { })
-            .catch(e => console.log(e))
+    const sendMove = ({ sourceSquare, targetSquare, piece }: { sourceSquare: string, targetSquare: string, piece: string }) => {
+        if (type === "online")
+            networkWorker.sendMove(user_id, match_code!, sourceSquare, targetSquare, piece)
+                .then(r => { })
+                .catch(e => console.log(e))
+        else {
+            const event = new CustomEvent("move", { detail: { from: sourceSquare, to: targetSquare, piece } })
+            document.dispatchEvent(event)
+        }
     }
 
     const navBarIfDesktop = () => {
@@ -82,8 +92,8 @@ export default function PlayOnlineChessBoardScene() {
                             <Chessboard position={position} onDrop={({ sourceSquare, targetSquare, piece }) => {
                                 const playersColor = color[0], movedPieceColor = piece[0]
                                 if (playersColor === movedPieceColor) {
-                                    sendMove({ sourceSquare, targetSquare })
-                                    onDrop({ sourceSquare, targetSquare })
+                                    sendMove({ sourceSquare, targetSquare, piece })
+                                    onDrop({ sourceSquare, targetSquare, piece })
                                 }
                             }} width={chessboardHeight} orientation={color} />
                         )

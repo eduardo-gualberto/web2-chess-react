@@ -1,11 +1,12 @@
 import React, { Component, useState } from "react";
-import { Chess, Square } from "chess.js";
+import { Chess, Piece, Square } from "chess.js";
 
 type Web2ChessboardChildrenProps = {
     position: string,
     onDrop: (obj: {
         sourceSquare: Square;
         targetSquare: Square;
+        piece: string;
     }) => void
 }
 type Web2ChessboardProps = {
@@ -32,11 +33,22 @@ export default class Web2Chessboard extends Component {
         document.addEventListener("move", (e) => {
             //@ts-ignore
             const move = e.detail
-            this.onDrop({sourceSquare: move.from, targetSquare: move.to})
+            console.log("web2Chessboard received move")
+            this.onDrop({sourceSquare: move.from, targetSquare: move.to, piece: move.piece})
+            const event = new CustomEvent("__move", { detail: { sourceSquare: move.from, targetSquare: move.to, piece: move.piece } })
+            document.dispatchEvent(event)
+        })
+
+        document.addEventListener("__move", e => {
+            //@ts-ignore
+            const move = e.detail
+            //@ts-ignore
+            console.log(`web2Chessboard received __move with ${e.details}`)
+            this.onDrop({sourceSquare: move.from, targetSquare: move.to, piece: move.piece})
         })
     }
 
-    onDrop = ({ sourceSquare, targetSquare }: { sourceSquare: Square, targetSquare: Square }) => {
+    onDrop = ({ sourceSquare, targetSquare, piece }: { sourceSquare: Square, targetSquare: Square, piece: string }) => {
         try {
             const move = this.game.move({
                 from: sourceSquare,

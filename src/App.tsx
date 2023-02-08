@@ -14,8 +14,8 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Layout header={<Header />} content={<HomeScene />} />} />
-        <Route path="/online" element={<Layout header={<Header shouldShowBackIcon backIconPath='/'/>} content={<PlayOnlineScene />} />} />
-        <Route path="/onlineGame" element={<Layout header={<Header shouldShowBackIcon backIconPath='/online'/>} content={<PlayOnlineChessBoardScene />} />} />
+        <Route path="/online" element={<Layout header={<Header shouldShowBackIcon backIconPath='/' />} content={<PlayOnlineScene />} />} />
+        <Route path="/onlineGame" element={<Layout header={<Header shouldShowBackIcon backIcon='home' backIconPath='/' />} content={<PlayOnlineChessBoardScene />} />} />
       </Routes>
     </Router>
   );

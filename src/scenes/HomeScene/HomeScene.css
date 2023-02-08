@@ -47,6 +47,10 @@
     text-decoration: none;
 }
 
+.play-btn:hover {
+    cursor: pointer;
+}
+
 @media only screen and (max-width: 768px) {
     #content-body {
         flex-direction: column;

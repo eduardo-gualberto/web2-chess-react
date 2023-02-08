@@ -3,6 +3,7 @@ import './Header.css';
 
 type HeaderProps = {
     shouldShowBackIcon?: boolean
+    backIcon?: string
     backIconPath?: string
 }
 
@@ -12,7 +13,7 @@ export default function Header(props: HeaderProps) {
         backButton =
             <a href={props.backIconPath} id="back-icon">
                 <span className="material-symbols-outlined">
-                    arrow_back_ios
+                    {props.backIcon ?? "arrow_back_ios"}
                 </span>
             </a>
     } else {

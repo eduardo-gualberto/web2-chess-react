@@ -44,9 +44,9 @@ export default class NetworkWorker {
         })
     }
 
-    public async sendMove(user_id: string, match_code: string, from: string, to: string): Promise<void> {
+    public async sendMove(user_id: string, match_code: string, from: string, to: string, piece: string): Promise<void> {
         return new Promise((res, rej) => {
-            axios.post('http://localhost:3001/move', { match_code, user_id, from, to }, {
+            axios.post('http://localhost:3001/move', { match_code, user_id, from, to, piece }, {
                 headers: {
                     "Content-Type": "application/json"
                 }
@@ -69,7 +69,7 @@ export default class NetworkWorker {
         })
     }
 
-    public subscribeToMove(user_id: string, match_code: string, subscriber: (from: string, to: string) => void) {
+    public subscribeToMove(user_id: string, match_code: string, subscriber: (from: string, to: string, piece: string) => void) {
         if (this.intervals["move#" + user_id])
             return
         this.intervals["move#" + user_id] = setInterval(() => {
@@ -79,10 +79,10 @@ export default class NetworkWorker {
                 }
             })
                 .then(res => {
-                    const move = res.data.move ? { from: res.data.move.from, to: res.data.move.to, promotion: res.data.move.promotion } : undefined
+                    const move = res.data.move ? { from: res.data.move.from, to: res.data.move.to, promotion: res.data.move.promotion, piece: res.data.move.piece } : undefined
                     if (move) {
                         //@ts-ignore
-                        subscriber(move.from, move.to)
+                        subscriber(move.from, move.to, move.piece)
                     }
                 })
                 .catch(e => {
