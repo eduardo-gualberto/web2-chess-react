@@ -7,7 +7,8 @@ import { useOnMount, useOnUnmount } from "../../common/helpers/functionalLifecyc
 import { useLocation } from "react-router-dom";
 import NetworkWorker from "../../workers/networkWorker";
 import UserChessboardCard from "../../common/components/UserChessboardCard/UserChessboardCard";
-import OpponentPlayerFabric from "../../workers/opponentPlayerFabric";
+import OpponentPlayerFabric from "../../common/helpers/opponentPlayerFabric";
+import moveSenderOfType from "../../common/helpers/moveSenderOfType";
 
 type PlayOnlineChessBoardSceneLocationState = {
     match_code?: string,
@@ -23,8 +24,8 @@ export default function PlayOnlineChessBoardScene() {
     const opponentPlayer = OpponentPlayerFabric.produce(type)
     const networkWorker = NetworkWorker.getInstance()
     const [chessboardHeight, setChessboardHeight] = useState(0)
-    const [oponent, setOponent] = useState({ user_id: '', user_name: 'Oponnent' })
-
+    const [opponent, setOpponent] = useState({ user_id: '', user_name: 'Oponnent' })
+    const moveSender = moveSenderOfType(type, user_id, match_code!)
 
 
     opponentPlayer.onMove((from, to, piece) => {
@@ -34,7 +35,7 @@ export default function PlayOnlineChessBoardScene() {
 
     opponentPlayer.onConnected(({ user_id, user_name }) => {
         networkWorker.unsubscribeToGameCreated(user_id)
-        setOponent({ user_id, user_name })
+        setOpponent({ user_id, user_name })
     })
 
     opponentPlayer.start({ match_code, user_id, user_name })
@@ -51,22 +52,11 @@ export default function PlayOnlineChessBoardScene() {
         opponentPlayer.stop()
     })
 
-    const sendMove = ({ sourceSquare, targetSquare, piece }: { sourceSquare: string, targetSquare: string, piece: string }) => {
-        if (type === "online")
-            networkWorker.sendMove(user_id, match_code!, sourceSquare, targetSquare, piece)
-                .then(r => { })
-                .catch(e => console.log(e))
-        else {
-            const event = new CustomEvent("move", { detail: { from: sourceSquare, to: targetSquare, piece } })
-            document.dispatchEvent(event)
-        }
-    }
-
     const navBarIfDesktop = () => {
         return (
             !isMobile ?
                 <div id="nav-bar-game">
-                    <UserChessboardCard isCurrentUser={false} user_id={oponent.user_id} user_name={oponent.user_name} />
+                    <UserChessboardCard isCurrentUser={false} user_id={opponent.user_id} user_name={opponent.user_name} />
                     <UserChessboardCard isCurrentUser={true} user_id={user_id} user_name={user_name} />
                 </div>
                 : <></>
@@ -84,7 +74,7 @@ export default function PlayOnlineChessBoardScene() {
 
     return (
         <div id="content-body">
-            {userChessboardCardIfMobile(false, oponent.user_id, oponent.user_name)}
+            {userChessboardCardIfMobile(false, opponent.user_id, opponent.user_name)}
             <div id="chessboard">
                 <Web2Chessboard position="start" onFirstMove={() => { }}>
                     {({ position, onDrop }) => {
@@ -92,7 +82,7 @@ export default function PlayOnlineChessBoardScene() {
                             <Chessboard position={position} onDrop={({ sourceSquare, targetSquare, piece }) => {
                                 const playersColor = color[0], movedPieceColor = piece[0]
                                 if (playersColor === movedPieceColor) {
-                                    sendMove({ sourceSquare, targetSquare, piece })
+                                    moveSender({ sourceSquare, targetSquare, piece })
                                     onDrop({ sourceSquare, targetSquare, piece })
                                 }
                             }} width={chessboardHeight} orientation={color} />
@@ -105,5 +95,4 @@ export default function PlayOnlineChessBoardScene() {
 
         </div>
     )
-
 }

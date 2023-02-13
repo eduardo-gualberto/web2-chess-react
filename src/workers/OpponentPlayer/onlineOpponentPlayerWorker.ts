@@ -1,4 +1,4 @@
-import NetworkWorker from "./networkWorker";
+import NetworkWorker from "../networkWorker";
 import OpponentPlayer from "./opponentPlayer";
 
 export default class OnlineOpponentPlayerWorker implements OpponentPlayer {
